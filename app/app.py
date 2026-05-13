@@ -59,9 +59,12 @@ async def login( data: UserAuth, db: Annotated[sqlite3.Connection, Depends(get_d
         "refresh_token": create_refresh_token(user["username"]),
     }
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: str | None = None):
-    return {"item_id": item_id, "q": q}
+@app.get("/health-secure")
+async def health_secure(user = Depends(get_current_user)):
+    return {
+        "status": "ok",
+        "user": user["username"]
+    }
 
 @app.get("/")
 def read_root():
