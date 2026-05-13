@@ -2,7 +2,7 @@ from fastapi import FastAPI, status, HTTPException, Depends
 from typing import Annotated
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import RedirectResponse
-from schemas import UserOut, UserAuth, TokenSchema
+from schemas import UserOut, UserAuth, TokenSchema, infoInput, infoOutput
 from deps import get_current_user, get_db
 import sqlite3
 from utils import (
@@ -65,6 +65,55 @@ async def health_secure(user = Depends(get_current_user)):
         "status": "ok",
         "user": user["username"]
     }
+
+@app.post('/upload-data', response_model=infoOutput)
+async def upload_data(data: infoInput, user: Annotated[dict, Depends(get_current_user)], db: Annotated[sqlite3.Connection, Depends(get_db)]):
+    cur = db.cursor()
+
+    cur.execute(
+        "INSERT INTO info (userId, data) VALUES (?, ?)",
+        (user["id"], data.info)
+    )
+
+    db.commit()
+
+    return {
+        "info": data.info,
+        "user": user["username"]
+    }
+
+@app.get('/get-data')
+async def get_data(data: infoInput, user: Annotated[dict, Depends(get_current_user)], db: Annotated[sqlite3.Connection, Depends(get_db)]):
+    cur = db.cursor()
+
+    cur.execute(
+        "SELECT data from info WHERE userid = ?", (user["id"],)
+    )
+
+    info = cur.fetchall()
+
+    if not info:
+        raise HTTPException(
+            status_code=400,
+            detail="No data"
+        )
+
+    return {
+        "info": info
+    }
+
+@app.delete('/delete-all-data')
+async def delete_all_data( user: Annotated[dict, Depends(get_current_user)], db: Annotated[sqlite3.Connection, Depends(get_db)]):
+    cur = db.cursor()
+
+    cur.execute(
+        "DELETE FROM info WHERE userId = ?",
+        (user["id"],)
+    )
+
+    db.commit()
+
+    return {"msg": "All data deleted"}
 
 @app.get("/")
 def read_root():

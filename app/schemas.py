@@ -10,3 +10,9 @@ class UserOut(BaseModel):
 class TokenSchema(BaseModel):
     access_token: str
     refresh_token: str
+
+class infoInput(BaseModel):
+    info: str
+
+class infoOutput(BaseModel):
+    info: str
