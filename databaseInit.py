@@ -1,9 +1,25 @@
 import sqlite3
 
-# Conect with database 
 con = sqlite3.connect("fastApi.db")
 cur = con.cursor()
 
-# Create example tables
-cur.execute("CREATE TABLE users(id, username, password)")
-cur.execute("CREATE TABLE info(id, userId, data)")
+# Create tables
+cur.execute("""
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL
+)
+""")
+
+cur.execute("""
+CREATE TABLE info (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    userId INTEGER,
+    data TEXT,
+    FOREIGN KEY (userId) REFERENCES users(id)
+)
+""")
+
+con.commit()
+con.close()
